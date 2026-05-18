@@ -41,8 +41,7 @@ export default async function Home() {
           Adaptive phenotype stratification questionnaire for LongCovid
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-          Collect symptom, trigger, timing, intervention-response, and outcome data, then map
-          them into explainable regulatory-state hypotheses. This is not a diagnosis engine.
+          a comprehensive review of symptoms into explainable regulatory-state hypotheses; this is not a diagnosis
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link className="focus-ring rounded-md bg-clinical px-5 py-3 font-medium text-white shadow-soft" href="/intake">
