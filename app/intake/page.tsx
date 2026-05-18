@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import type { AnswerOption, Prisma } from "@prisma/client";
 import { submitIntake } from "./actions";
+
+type IntakeQuestion = Prisma.QuestionGetPayload<{
+  include: { answerOptions: true };
+}>;
+
+type IntakeSection = readonly [string, IntakeQuestion[]];
 
 export default async function IntakePage() {
   const questions = await prisma.question.findMany({
@@ -9,14 +16,14 @@ export default async function IntakePage() {
   });
 
   const sections = [
-    ["Identity", questions.filter((q) => ["onset"].includes(q.code))],
-    ["Neurocognitive", questions.filter((q) => ["head_pressure", "cognitive_flattening", "sensory_gain", "emotional_blunting"].includes(q.code))],
-    ["Autonomic", questions.filter((q) => ["heat_instability", "hr_instability", "electrolyte_response", "post_meal"].includes(q.code))],
-    ["Histamine", questions.filter((q) => ["tomato_food", "pollen", "flushing_itching", "famotidine", "hydroxyzine"].includes(q.code))],
-    ["Immune", questions.filter((q) => ["viral_persistence", "antiviral_response", "steroid_response"].includes(q.code))],
-    ["Sleep", questions.filter((q) => ["sleep_collapse", "night_vibrations", "sleep_restoration", "circadian_drift"].includes(q.code))],
-    ["Energy", questions.filter((q) => ["fatigue", "exercise_intolerance", "coq10", "stress_crash", "fluctuation", "functional_limit", "multi_domain"].includes(q.code))]
-  ] as const;
+    ["Identity", questions.filter((question: IntakeQuestion) => ["onset"].includes(question.code))],
+    ["Neurocognitive", questions.filter((question: IntakeQuestion) => ["head_pressure", "cognitive_flattening", "sensory_gain", "emotional_blunting"].includes(question.code))],
+    ["Autonomic", questions.filter((question: IntakeQuestion) => ["heat_instability", "hr_instability", "electrolyte_response", "post_meal"].includes(question.code))],
+    ["Histamine", questions.filter((question: IntakeQuestion) => ["tomato_food", "pollen", "flushing_itching", "famotidine", "hydroxyzine"].includes(question.code))],
+    ["Immune", questions.filter((question: IntakeQuestion) => ["viral_persistence", "antiviral_response", "steroid_response"].includes(question.code))],
+    ["Sleep", questions.filter((question: IntakeQuestion) => ["sleep_collapse", "night_vibrations", "sleep_restoration", "circadian_drift"].includes(question.code))],
+    ["Energy", questions.filter((question: IntakeQuestion) => ["fatigue", "exercise_intolerance", "coq10", "stress_crash", "fluctuation", "functional_limit", "multi_domain"].includes(question.code))]
+  ] satisfies IntakeSection[];
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-10">
@@ -41,18 +48,18 @@ export default async function IntakePage() {
           </label>
         </section>
 
-        {sections.map(([sectionName, items]) => (
+        {sections.map(([sectionName, items]: IntakeSection) => (
           <section key={sectionName} className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
               <h2 className="font-semibold text-ink">{sectionName}</h2>
               <span className="text-xs text-muted">{items.length} questions</span>
             </div>
             <div className="grid gap-5">
-              {items.map((question) => (
+              {items.map((question: IntakeQuestion) => (
                 <fieldset key={question.id}>
                   <legend className="text-sm font-medium text-ink">{question.prompt}</legend>
                   <div className="mt-3 grid gap-2 md:grid-cols-2">
-                    {question.answerOptions.map((option) => (
+                    {question.answerOptions.map((option: AnswerOption) => (
                       <label key={option.id} className="focus-within:ring-3 rounded-md border border-line bg-paper px-3 py-2 text-sm text-ink focus-within:ring-blue-200">
                         <input className="mr-2" type="radio" name={question.code} value={option.id} required />
                         {option.label}

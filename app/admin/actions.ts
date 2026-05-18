@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 type EditableModel =
   | "functionalDomain"
@@ -39,7 +40,34 @@ export async function updateOntologyItem(formData: FormData) {
   if (field === "isActive") value = rawValue === "true";
   if (rawValue === "" && ["description"].includes(field)) value = null;
 
-  const delegate = (prisma as any)[model];
-  await delegate.update({ where: { id }, data: { [field]: value } });
+  const data: Record<string, string | number | boolean | null> = { [field]: value };
+
+  switch (model) {
+    case "functionalDomain":
+      await prisma.functionalDomain.update({ where: { id }, data: data as Prisma.FunctionalDomainUpdateInput });
+      break;
+    case "symptom":
+      await prisma.symptom.update({ where: { id }, data: data as Prisma.SymptomUpdateInput });
+      break;
+    case "trigger":
+      await prisma.trigger.update({ where: { id }, data: data as Prisma.TriggerUpdateInput });
+      break;
+    case "question":
+      await prisma.question.update({ where: { id }, data: data as Prisma.QuestionUpdateInput });
+      break;
+    case "answerOption":
+      await prisma.answerOption.update({ where: { id }, data: data as Prisma.AnswerOptionUpdateInput });
+      break;
+    case "phenotype":
+      await prisma.phenotype.update({ where: { id }, data: data as Prisma.PhenotypeUpdateInput });
+      break;
+    case "carePathway":
+      await prisma.carePathway.update({ where: { id }, data: data as Prisma.CarePathwayUpdateInput });
+      break;
+    case "scoreRule":
+      await prisma.scoreRule.update({ where: { id }, data: data as Prisma.ScoreRuleUpdateInput });
+      break;
+  }
+
   revalidatePath("/admin");
 }

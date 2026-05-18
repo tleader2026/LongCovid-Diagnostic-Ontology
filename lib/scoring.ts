@@ -8,10 +8,10 @@ function addScore(map: Map<string, RankedScore>, key: string, weight: number, re
   map.set(key, current);
 }
 
-function finalize(map: Map<string, RankedScore>) {
+function finalize(map: Map<string, RankedScore>): RankedScore[] {
   const values = [...map.values()].sort((a, b) => b.score - a.score);
   const max = values[0]?.score || 1;
-  return values.map((item) => ({
+  return values.map((item: RankedScore) => ({
     ...item,
     score: Number(item.score.toFixed(1)),
     confidence: Number(Math.min(100, Math.max(8, (item.score / max) * 92)).toFixed(0))
@@ -65,9 +65,9 @@ export async function calculateSessionScores(sessionId: string) {
   await prisma.sessionScore.deleteMany({ where: { sessionId } });
   await prisma.sessionScore.createMany({
     data: [
-      ...result.domains.map((score) => ({ sessionId, scoreType: "DOMAIN", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, functionalDomainId: score.id })),
-      ...result.phenotypes.map((score) => ({ sessionId, scoreType: "PHENOTYPE", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, phenotypeId: score.id })),
-      ...result.mechanisms.map((score) => ({ sessionId, scoreType: "MECHANISM", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, mechanismHypothesisId: score.id }))
+      ...result.domains.map((score: RankedScore) => ({ sessionId, scoreType: "DOMAIN", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, functionalDomainId: score.id })),
+      ...result.phenotypes.map((score: RankedScore) => ({ sessionId, scoreType: "PHENOTYPE", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, phenotypeId: score.id })),
+      ...result.mechanisms.map((score: RankedScore) => ({ sessionId, scoreType: "MECHANISM", label: score.label, score: score.score, confidence: score.confidence, explanation: score.explanation, mechanismHypothesisId: score.id }))
     ]
   });
 

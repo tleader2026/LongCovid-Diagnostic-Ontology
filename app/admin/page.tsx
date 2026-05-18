@@ -1,6 +1,6 @@
 import { AdminEditable } from "@/components/AdminEditable";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import type { AnswerOption, CarePathway, Prisma, Symptom, Trigger } from "@prisma/client";
 
 type DomainWithRelations = Prisma.FunctionalDomainGetPayload<{
   include: { mechanisms: true; regions: true };
@@ -83,7 +83,7 @@ export default async function AdminPage() {
                   <AdminEditable model="question" id={question.id} field="category" value={question.category} />
                 </div>
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
-                  {question.answerOptions.map((option) => (
+                  {question.answerOptions.map((option: AnswerOption) => (
                     <AdminEditable key={option.id} model="answerOption" id={option.id} field="label" value={option.label} />
                   ))}
                 </div>
@@ -111,7 +111,7 @@ export default async function AdminPage() {
           <div className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <h2 className="mb-4 font-semibold text-ink">Care pathways</h2>
             <div className="grid gap-4">
-              {pathways.map((pathway) => (
+              {pathways.map((pathway: CarePathway) => (
                 <article key={pathway.id} className="rounded-md border border-line p-4">
                   <AdminEditable model="carePathway" id={pathway.id} field="name" value={pathway.name} />
                   <div className="mt-2">
@@ -127,7 +127,7 @@ export default async function AdminPage() {
           <div className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <h2 className="mb-4 font-semibold text-ink">Symptoms</h2>
             <div className="grid gap-2">
-              {symptoms.map((symptom) => (
+              {symptoms.map((symptom: Symptom) => (
                 <AdminEditable key={symptom.id} model="symptom" id={symptom.id} field="name" value={symptom.name} />
               ))}
             </div>
@@ -135,7 +135,7 @@ export default async function AdminPage() {
           <div className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <h2 className="mb-4 font-semibold text-ink">Triggers</h2>
             <div className="grid gap-2">
-              {triggers.map((trigger) => (
+              {triggers.map((trigger: Trigger) => (
                 <div key={trigger.id} className="grid gap-2 md:grid-cols-[1fr_160px]">
                   <AdminEditable model="trigger" id={trigger.id} field="name" value={trigger.name} />
                   <AdminEditable model="trigger" id={trigger.id} field="className" value={trigger.className} />

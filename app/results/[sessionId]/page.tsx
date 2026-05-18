@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { ScoreBar } from "@/components/ScoreBar";
 import { prisma } from "@/lib/prisma";
 import { calculateSessionScores } from "@/lib/scoring";
+import type { RankedScore } from "@/lib/types";
+import type { FunctionalDomain } from "@prisma/client";
 
 export default async function ResultsPage({ params }: { params: { sessionId: string } }) {
   const session = await prisma.intakeSession.findUnique({
@@ -13,7 +15,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
 
   const result = await calculateSessionScores(session.id);
   const domainColors = await prisma.functionalDomain.findMany();
-  const colorByName = new Map(domainColors.map((domain) => [domain.name, domain.color]));
+  const colorByName = new Map(domainColors.map((domain: FunctionalDomain) => [domain.name, domain.color]));
   const topPhenotype = result.phenotypes[0];
   const phenotype = topPhenotype
     ? await prisma.phenotype.findUnique({ where: { name: topPhenotype.label }, include: { pathway: true } })
@@ -43,7 +45,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
         <section>
           <h2 className="mb-3 font-semibold text-ink">Top functional domains</h2>
           <div className="grid gap-3">
-            {result.domains.slice(0, 6).map((score) => (
+            {result.domains.slice(0, 6).map((score: RankedScore) => (
               <ScoreBar key={score.label} {...score} color={colorByName.get(score.label)} />
             ))}
           </div>
@@ -51,7 +53,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
         <section>
           <h2 className="mb-3 font-semibold text-ink">Phenotype candidates</h2>
           <div className="grid gap-3">
-            {result.phenotypes.slice(0, 7).map((score) => (
+            {result.phenotypes.slice(0, 7).map((score: RankedScore) => (
               <ScoreBar key={score.label} {...score} color="#0f766e" />
             ))}
           </div>
@@ -59,7 +61,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
         <section>
           <h2 className="mb-3 font-semibold text-ink">Candidate mechanism hypothesis layer</h2>
           <div className="grid gap-3">
-            {result.mechanisms.slice(0, 8).map((score) => (
+            {result.mechanisms.slice(0, 8).map((score: RankedScore) => (
               <ScoreBar key={score.label} {...score} color="#7c3aed" />
             ))}
           </div>
@@ -67,7 +69,7 @@ export default async function ResultsPage({ params }: { params: { sessionId: str
         <section>
           <h2 className="mb-3 font-semibold text-ink">Trigger and intervention signals</h2>
           <div className="grid gap-3">
-            {[...result.triggers.slice(0, 4), ...result.interventions.slice(0, 4)].map((score) => (
+            {[...result.triggers.slice(0, 4), ...result.interventions.slice(0, 4)].map((score: RankedScore) => (
               <ScoreBar key={score.label} {...score} color="#b45309" />
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -232,7 +233,7 @@ async function main() {
   for (const [name, scale] of outcomes) await prisma.outcomeMeasure.create({ data: { name, scale } });
 
   async function createRule(answerOptionId: string, targetA: string, targetB: string, weight: number, explanation: string) {
-    const data: any = { answerOptionId, weight, explanation };
+    const data: Prisma.ScoreRuleUncheckedCreateInput = { answerOptionId, weight, explanation };
     for (const target of [targetA, targetB]) {
       const [kind, label] = target.split(":");
       if (kind === "domain") data.functionalDomainId = domainByName.get(label)!.id;
