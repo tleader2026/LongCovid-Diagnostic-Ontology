@@ -1,5 +1,26 @@
 import { AdminEditable } from "@/components/AdminEditable";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+
+type DomainWithRelations = Prisma.FunctionalDomainGetPayload<{
+  include: { mechanisms: true; regions: true };
+}>;
+type QuestionWithOptions = Prisma.QuestionGetPayload<{
+  include: { answerOptions: true };
+}>;
+type PhenotypeWithPathway = Prisma.PhenotypeGetPayload<{
+  include: { pathway: true };
+}>;
+type ScoreRuleWithTargets = Prisma.ScoreRuleGetPayload<{
+  include: {
+    answerOption: { include: { question: true } };
+    functionalDomain: true;
+    phenotype: true;
+    mechanismHypothesis: true;
+    trigger: true;
+    intervention: true;
+  };
+}>;
 
 export default async function AdminPage() {
   const [domains, symptoms, triggers, questions, phenotypes, pathways, scoreRules] = await Promise.all([
@@ -38,13 +59,15 @@ export default async function AdminPage() {
         <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
           <h2 className="mb-4 font-semibold text-ink">Functional domains</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            {domains.map((domain) => (
+            {domains.map((domain: DomainWithRelations) => (
               <article key={domain.id} className="rounded-md border border-line p-4">
                 <AdminEditable model="functionalDomain" id={domain.id} field="name" value={domain.name} />
                 <div className="mt-2">
                   <AdminEditable model="functionalDomain" id={domain.id} field="description" value={domain.description} multiline />
                 </div>
-                <p className="mt-3 text-xs text-muted">{domain.regions.length} regions/systems · {domain.mechanisms.length} candidate mechanisms</p>
+                <p className="mt-3 text-xs text-muted">
+                  {domain.regions.length} regions/systems - {domain.mechanisms.length} candidate mechanisms
+                </p>
               </article>
             ))}
           </div>
@@ -53,7 +76,7 @@ export default async function AdminPage() {
         <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
           <h2 className="mb-4 font-semibold text-ink">Questions and answer options</h2>
           <div className="grid gap-4">
-            {questions.map((question) => (
+            {questions.map((question: QuestionWithOptions) => (
               <article key={question.id} className="rounded-md border border-line p-4">
                 <div className="grid gap-2 md:grid-cols-[1fr_180px]">
                   <AdminEditable model="question" id={question.id} field="prompt" value={question.prompt} />
@@ -73,7 +96,7 @@ export default async function AdminPage() {
           <div className="rounded-lg border border-line bg-white p-5 shadow-soft">
             <h2 className="mb-4 font-semibold text-ink">Phenotypes</h2>
             <div className="grid gap-4">
-              {phenotypes.map((phenotype) => (
+              {phenotypes.map((phenotype: PhenotypeWithPathway) => (
                 <article key={phenotype.id} className="rounded-md border border-line p-4">
                   <AdminEditable model="phenotype" id={phenotype.id} field="name" value={phenotype.name} />
                   <div className="mt-2">
@@ -125,12 +148,19 @@ export default async function AdminPage() {
         <section className="rounded-lg border border-line bg-white p-5 shadow-soft">
           <h2 className="mb-4 font-semibold text-ink">Scoring rules</h2>
           <div className="grid gap-3">
-            {scoreRules.map((rule) => {
-              const target = rule.functionalDomain?.name || rule.phenotype?.name || rule.mechanismHypothesis?.name || rule.trigger?.name || rule.intervention?.name || "Unlabeled target";
+            {scoreRules.map((rule: ScoreRuleWithTargets) => {
+              const target =
+                rule.functionalDomain?.name ||
+                rule.phenotype?.name ||
+                rule.mechanismHypothesis?.name ||
+                rule.trigger?.name ||
+                rule.intervention?.name ||
+                "Unlabeled target";
+
               return (
                 <article key={rule.id} className="grid gap-2 rounded-md border border-line p-3 lg:grid-cols-[1fr_110px_1.2fr]">
                   <p className="text-sm text-muted">
-                    <span className="font-medium text-ink">{rule.answerOption.question.code}</span> · {rule.answerOption.label} → {target}
+                    <span className="font-medium text-ink">{rule.answerOption.question.code}</span> - {rule.answerOption.label} -&gt; {target}
                   </p>
                   <AdminEditable model="scoreRule" id={rule.id} field="weight" value={rule.weight} />
                   <AdminEditable model="scoreRule" id={rule.id} field="explanation" value={rule.explanation} />
