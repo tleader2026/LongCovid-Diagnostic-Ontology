@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id        String          @id @default(cuid())
+  name      String
+  email     String?
+  createdAt DateTime        @default(now())
+  sessions  IntakeSession[]
+}
+
+model IntakeSession {
+  id        String          @id @default(cuid())
+  patientId String
+  status    String          @default("IN_PROGRESS")
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  patient   Patient         @relation(fields: [patientId], references: [id])
+  answers   PatientAnswer[]
+  scores    SessionScore[]
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  code          String         @unique
+  prompt        String
+  helpText      String?
+  sortOrder     Int
+  category      String
+  parentCode    String?
+  parentValue   String?
+  isActive      Boolean        @default(true)
+  answerOptions AnswerOption[]
+}
+
+model AnswerOption {
+  id         String      @id @default(cuid())
+  questionId String
+  label      String
+  value      String
+  sortOrder  Int
+  question   Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  scoreRules ScoreRule[]
+  answers    PatientAnswer[]
+}
+
+model PatientAnswer {
+  id             String       @id @default(cuid())
+  sessionId      String
+  questionId     String
+  answerOptionId String
+  createdAt      DateTime     @default(now())
+  session        IntakeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question       Question      @relation(fields: [questionId], references: [id])
+  answerOption   AnswerOption @relation(fields: [answerOptionId], references: [id])
+
+  @@unique([sessionId, questionId])
+}
+
+model FunctionalDomain {
+  id          String                @id @default(cuid())
+  name        String                @unique
+  slug        String                @unique
+  description String
+  color       String
+  regions     RegionOrSystem[]
+  mechanisms  MechanismHypothesis[]
+  scoreRules  ScoreRule[]
+  scores      SessionScore[]
+}
+
+model RegionOrSystem {
+  id                 String           @id @default(cuid())
+  name               String
+  type               String
+  functionalDomainId String
+  functionalDomain   FunctionalDomain @relation(fields: [functionalDomainId], references: [id], onDelete: Cascade)
+}
+
+model CellPopulation {
+  id          String                @id @default(cuid())
+  name        String                @unique
+  description String?
+  mechanisms  MechanismHypothesis[]
+}
+
+model MechanismHypothesis {
+  id                 String           @id @default(cuid())
+  name               String
+  description        String
+  functionalDomainId String
+  cellPopulationId   String?
+  functionalDomain   FunctionalDomain @relation(fields: [functionalDomainId], references: [id], onDelete: Cascade)
+  cellPopulation     CellPopulation?  @relation(fields: [cellPopulationId], references: [id])
+  scoreRules         ScoreRule[]
+  scores             SessionScore[]
+}
+
+model Symptom {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  scoreRules  ScoreRule[]
+}
+
+model Trigger {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  className   String
+  description String?
+  scoreRules  ScoreRule[]
+}
+
+model TimingPattern {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  scoreRules  ScoreRule[]
+}
+
+model Phenotype {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  description String
+  pathwayId   String?
+  pathway     CarePathway?  @relation(fields: [pathwayId], references: [id])
+  scoreRules  ScoreRule[]
+  scores      SessionScore[]
+}
+
+model Intervention {
+  id          String                 @id @default(cuid())
+  name        String                 @unique
+  category    String
+  description String?
+  responses   InterventionResponse[]
+  scoreRules  ScoreRule[]
+}
+
+model InterventionResponse {
+  id             String       @id @default(cuid())
+  interventionId String
+  responseLabel  String
+  interpretation String
+  intervention   Intervention @relation(fields: [interventionId], references: [id], onDelete: Cascade)
+}
+
+model OutcomeMeasure {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  scale       String
+  description String?
+}
+
+model CarePathway {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String
+  steps       String
+  phenotypes  Phenotype[]
+}
+
+model ScoreRule {
+  id                    String               @id @default(cuid())
+  answerOptionId        String
+  weight                Float
+  explanation           String
+  functionalDomainId    String?
+  phenotypeId           String?
+  mechanismHypothesisId String?
+  symptomId             String?
+  triggerId             String?
+  timingPatternId       String?
+  interventionId        String?
+  answerOption          AnswerOption         @relation(fields: [answerOptionId], references: [id], onDelete: Cascade)
+  functionalDomain      FunctionalDomain?    @relation(fields: [functionalDomainId], references: [id])
+  phenotype             Phenotype?           @relation(fields: [phenotypeId], references: [id])
+  mechanismHypothesis   MechanismHypothesis? @relation(fields: [mechanismHypothesisId], references: [id])
+  symptom               Symptom?             @relation(fields: [symptomId], references: [id])
+  trigger               Trigger?             @relation(fields: [triggerId], references: [id])
+  timingPattern         TimingPattern?       @relation(fields: [timingPatternId], references: [id])
+  intervention          Intervention?        @relation(fields: [interventionId], references: [id])
+}
+
+model SessionScore {
+  id                    String               @id @default(cuid())
+  sessionId             String
+  scoreType             String
+  label                 String
+  score                 Float
+  confidence            Float
+  explanation           String
+  functionalDomainId    String?
+  phenotypeId           String?
+  mechanismHypothesisId String?
+  session               IntakeSession        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  functionalDomain      FunctionalDomain?    @relation(fields: [functionalDomainId], references: [id])
+  phenotype             Phenotype?           @relation(fields: [phenotypeId], references: [id])
+  mechanismHypothesis   MechanismHypothesis? @relation(fields: [mechanismHypothesisId], references: [id])
+}
